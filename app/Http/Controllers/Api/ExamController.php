@@ -24,6 +24,7 @@ class ExamController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorizeAdmin();
         $validated = $request->validate([
             'title' => 'required|string|min:5|max:255',
             'description' => 'nullable|string',
@@ -45,7 +46,7 @@ class ExamController extends Controller
     {
         $exam = Exam::findOrFail($id);
         if(!$exam){
-            return response()->json(['msg'=>'exam not found'],404);
+            return response()->json(['message'=>'exam not found'],404);
         }
         return response()->json($exam->load('questions.choices'),200);
     }
@@ -55,12 +56,13 @@ class ExamController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        $this->authorizeAdmin();
         $exam = Exam::findOrFail($id);
         if(!$exam){
-            return response()->json(['msg'=>'exam not found'],404);
+            return response()->json(['message'=>'exam not found'],404);
         }
         if ($exam->creator() != Auth::id()){
-            return response()->json(['msg'=>'you dont have access to this exam'],403);
+            return response()->json(['message'=>'you dont have access to this exam'],403);
         }
         $validated = $request->validate([
             'title' => 'required|string|min:5|max:255',
@@ -76,14 +78,23 @@ class ExamController extends Controller
      */
     public function destroy(string $id)
     {
+        $this->authorizeAdmin();
         $exam = Exam::findOrFail($id);
         if(!$exam){
-            return response()->json(['msg'=>'exam not found'],404);
+            return response()->json(['message'=>'exam not found'],404);
         }
         if ($exam->creator() != Auth::id()){
-            return response()->json(['msg'=>'you dont have access to this exam'],403);
+            return response()->json(['message'=>'you dont have access to this exam'],403);
         }
         $exam->delete();
         return response()->json(['message' => 'Exam deleted']);
+    }
+
+    private function authorizeAdmin()
+    {
+        if (Auth::user()->role !== 'admin') {
+
+        return response()->json(['message' => 'Only admins can perform this action'],403);
+        }
     }
 }
