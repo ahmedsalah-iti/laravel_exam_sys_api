@@ -13,12 +13,22 @@ return new class extends Migration
     {
         Schema::create('student_answers', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('exam_attempt_id');
-            $table->unsignedBigInteger('question_id');
-            $table->unsignedBigInteger('choice_id')->nullable();
-            $table->foreign('exam_attempt_id')->references('id')->on('exam_attempts')->onDelete('cascade');
-            $table->foreign('question_id')->references('id')->on('questions')->onDelete('set null');
-            $table->foreign('choice_id')->references('id')->on('choices')->onDelete('set null');
+
+            // Use Laravel's foreignId() shortcut with onDelete
+            $table->foreignId('exam_attempt_id')
+                  ->constrained()
+                  ->onDelete('cascade');
+
+            $table->foreignId('question_id')
+                  ->nullable()
+                  ->constrained()
+                  ->onDelete('set null');
+
+            $table->foreignId('choice_id')
+                  ->nullable()
+                  ->constrained()
+                  ->onDelete('set null');
+
             $table->timestamps();
         });
     }
