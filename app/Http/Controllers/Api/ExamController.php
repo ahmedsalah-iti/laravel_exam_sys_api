@@ -42,28 +42,18 @@ class ExamController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Exam $exam)
     {
-        $exam = Exam::findOrFail($id);
-        if(!$exam){
-            return response()->json(['message'=>'exam not found'],404);
-        }
         return response()->json($exam->load('questions.choices'),200);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Exam $exam)
     {
         $this->authorizeAdmin();
-        $exam = Exam::findOrFail($id);
-        if(!$exam){
-            return response()->json(['message'=>'exam not found'],404);
-        }
-        if ($exam->creator() != Auth::id()){
-            return response()->json(['message'=>'you dont have access to this exam'],403);
-        }
+        $this->authorizeCreator($exam);
         $validated = $request->validate([
             'title' => 'required|string|min:5|max:255',
             'description' => 'nullable|string',
@@ -76,16 +66,10 @@ class ExamController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Exam $exam)
     {
         $this->authorizeAdmin();
-        $exam = Exam::findOrFail($id);
-        if(!$exam){
-            return response()->json(['message'=>'exam not found'],404);
-        }
-        if ($exam->creator() != Auth::id()){
-            return response()->json(['message'=>'you dont have access to this exam'],403);
-        }
+        $this->authorizeCreator($exam);
         $exam->delete();
         return response()->json(['message' => 'Exam deleted']);
     }
@@ -95,6 +79,13 @@ class ExamController extends Controller
         if (Auth::user()->role !== 'admin') {
 
         return response()->json(['message' => 'Only admins can perform this action'],403);
+        }
+    }
+
+    private function authorizeCreator(Exam $exam)
+    {
+        if ($exam->created_by !== Auth::id()) {
+            abort(403, 'You are not the creator of this exam');
         }
     }
 }
