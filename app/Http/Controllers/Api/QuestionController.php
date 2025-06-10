@@ -10,10 +10,10 @@ use Illuminate\Support\Facades\Auth;
 
 class QuestionController extends Controller
 {
-    public function store(Request $request, string $id)
+    public function store(Request $request, Exam $exam)
     {
-        $exam = Exam::findOrFail($id);
-        $this->restrictToCreator($exam);
+        $this->authorizeAdmin();
+        $this->authorizeCreator($exam);
         $validated = $request->validate([
             'question_text' => 'required|string',
             'choices' => 'required|array|min:2',
@@ -31,10 +31,9 @@ class QuestionController extends Controller
 
         return response()->json($question->load('choices'), 201);
     }
-    public function update(Request $request, string $id)
+    public function update(Request $request, Question $question)
     {
         $this->authorizeAdmin();
-        $question = Question::findOrFail($id);
         $this->authorizeCreator($question->exam);
         $validated = $request->validate([
             'question_text' => 'required|string',
